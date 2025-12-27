@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #111820;
+            --bg-card: #151d28;
+            --bg-input: #1a2433;
+            --border-color: #2a3a4d;
+            --border-focus: #00d4aa;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #5a6570;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0, 212, 170, 0.15);
+            --accent-glow: rgba(0, 212, 170, 0.4);
+            --danger: #ff6b6b;
+            --warning: #ffc145;
+            --success: #00d4aa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse at top, rgba(0, 212, 170, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(0, 100, 150, 0.05) 0%, transparent 40%);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent) 0%, #00a080 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .logo-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--bg-primary);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 8px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .badge {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .meter-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .meter-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .meter-item:hover {
+            border-color: var(--accent-dim);
+        }
+
+        .meter-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .meter-index {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: var(--bg-input);
+            padding: 8px 12px;
+            border-radius: 6px;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .meter-label {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .meter-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .field input {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .field input[type="number"] {
+            font-family: 'IBM Plex Mono', monospace;
+            direction: ltr;
+            text-align: right;
+        }
+
+        .liters-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .liters-display input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .liters-display .unit {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: var(--bg-input);
+            padding: 14px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-start;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #00e6b8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 16px 24px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+            color: var(--bg-primary);
+        }
+
+        .toast.error {
+            background: var(--danger);
+            color: white;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            header {
+                margin-bottom: 30px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .meter-item {
+                padding: 14px;
+            }
+
+            .field input {
+                padding: 12px 14px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .liters-display .unit {
+                padding: 12px 14px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1>لوحة التحكم</h1>
+                </div>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    العدادات
+                    <span class="badge">٣</span>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>متصل</span>
+                </div>
+            </div>
+
+            <div class="meter-list" id="meter-list">
+                <!-- Meters will be rendered here -->
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="saveConfig()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                </svg>
+                حفظ
+            </button>
+            <button class="btn btn-secondary" onclick="resetConfig()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+                إعادة تعيين
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Fixed 3 meters
+        const DEFAULT_METERS = [
+            { id: 1, name: "العداد الأول", target_liters: 0.200 },
+            { id: 2, name: "العداد الثاني", target_liters: 0.350 },
+            { id: 3, name: "العداد الثالث", target_liters: 0.500 }
+        ];
+
+        let meters = JSON.parse(JSON.stringify(DEFAULT_METERS));
+
+        // Load existing configuration on page load
+        document.addEventListener('DOMContentLoaded', loadConfig);
+
+        function loadConfig() {
+            fetch('/api/config')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.flow_meters && data.flow_meters.length === 3) {
+                        meters = data.flow_meters.map((m, index) => ({
+                            id: index + 1,
+                            name: m.name || DEFAULT_METERS[index].name,
+                            target_liters: m.target_liters
+                        }));
+                    }
+                    renderMeters();
+                })
+                .catch(() => {
+                    // No existing config, use defaults
+                    renderMeters();
+                });
+        }
+
+        function updateMeter(id, field, value) {
+            const meter = meters.find(m => m.id === id);
+            if (meter) {
+                if (field === 'target_liters') {
+                    // Clamp value between 0 and 200
+                    value = Math.max(0, Math.min(200, parseFloat(value) || 0));
+                }
+                meter[field] = value;
+            }
+        }
+
+        function renderMeters() {
+            const list = document.getElementById('meter-list');
+            
+            list.innerHTML = meters.map((meter, index) => `
+                <div class="meter-item" data-id="${meter.id}">
+                    <div class="meter-header">
+                        <div class="meter-index">#${index + 1}</div>
+                        <div class="meter-label">${escapeHtml(meter.name)}</div>
+                    </div>
+                    <div class="meter-fields">
+                        <div class="field">
+                            <label>الهدف (٠-٢٠٠)</label>
+                            <div class="liters-display">
+                                <input type="number" 
+                                       value="${meter.target_liters}" 
+                                       min="0" 
+                                       max="200" 
+                                       step="0.001"
+                                       inputmode="decimal"
+                                       onchange="updateMeter(${meter.id}, 'target_liters', this.value)"
+                                       placeholder="0.000">
+                                <span class="unit">لتر</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateConfig() {
+            return {
+                flow_meters: meters.map((m, index) => ({
+                    id: index + 1,
+                    name: m.name,
+                    target_liters: parseFloat(m.target_liters) || 0,
+                    unit: "L"
+                })),
+                last_updated: new Date().toISOString(),
+                version: "1.0"
+            };
+        }
+
+        function saveConfig() {
+            const config = generateConfig();
+            
+            fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            })
+            .then(res => {
+                if (res.ok) {
+                    showToast('تم الحفظ بنجاح', 'success');
+                } else {
+                    throw new Error('Failed to save');
+                }
+            })
+            .catch(err => {
+                showToast('فشل في الحفظ', 'error');
+            });
+        }
+
+        function resetConfig() {
+            if (confirm('هل أنت متأكد من إعادة التعيين؟')) {
+                meters = JSON.parse(JSON.stringify(DEFAULT_METERS));
+                renderMeters();
+                showToast('تم إعادة التعيين', 'success');
+            }
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

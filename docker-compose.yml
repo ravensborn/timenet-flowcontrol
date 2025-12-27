@@ -1,0 +1,22 @@
+services:
+  flow-meter-config:
+    build: .
+    container_name: flow-meter-config
+    ports:
+      - "3999:3000"
+    volumes:
+      # Persist configuration data
+      - flow-data:/data
+    environment:
+      - PORT=3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/rates.json"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  flow-data:
+    driver: local
