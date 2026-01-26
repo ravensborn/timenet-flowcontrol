@@ -1,5 +1,5 @@
 {
-  "name": "flow-meter-config",
+  "name": "flow-meter-control",
   "version": "1.0.0",
   "description": "Flow Meter Configuration Web Interface",
   "main": "server.js",

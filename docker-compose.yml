@@ -1,12 +1,9 @@
 services:
-  flow-meter-config:
+  timenet-flow-control:
     build: .
-    container_name: flow-meter-config
-    ports:
-      - "3999:3000"
+    container_name: timenet-flow-control-config
     volumes:
-      # Persist configuration data
-      - flow-data:/data
+      - flow-control:/data
     environment:
       - PORT=3000
     restart: unless-stopped
@@ -19,4 +16,3 @@ services:
 
 volumes:
   flow-data:
-    driver: local
