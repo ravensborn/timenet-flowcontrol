@@ -3,7 +3,7 @@ services:
     build: .
     container_name: timenet-flow-control-config
     volumes:
-      - flow-control:/data
+      - flow-control-data:/data
     environment:
       - PORT=3000
     restart: unless-stopped
@@ -15,4 +15,4 @@ services:
       start_period: 10s
 
 volumes:
-  flow-data:
+  flow-control-data:
