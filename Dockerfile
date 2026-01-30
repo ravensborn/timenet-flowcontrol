@@ -7,12 +7,12 @@ COPY package.json ./
 
 # No dependencies to install (using built-in modules only)
 
+# Create necessary directories
+RUN mkdir -p /data /app/public
+
 # Copy application files
 COPY server.js ./
 COPY index.html ./public/
-
-# Create data directory
-RUN mkdir -p /data
 
 # Expose port
 EXPOSE 3000

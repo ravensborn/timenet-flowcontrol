@@ -6,6 +6,8 @@ services:
       - flow-control-data:/data
     environment:
       - PORT=3000
+      - AUTH_USERNAME=admin
+      - AUTH_PASSWORD=admin@111
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/rates.json"]
