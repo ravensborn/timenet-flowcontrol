@@ -154,13 +154,16 @@ const server = http.createServer((req, res) => {
                         throw new Error('Invalid configuration: flow_meters must be an array of exactly 3 meters');
                     }
                     
-                    // Validate each meter
+                    // Validate and adjust each meter - REDUCE by 0.500
                     config.flow_meters.forEach((meter, index) => {
                         if (typeof meter.target_liters !== 'number' || 
                             meter.target_liters < 0 || 
                             meter.target_liters > 200) {
                             throw new Error(`Invalid target_liters for meter ${index + 1}: must be between 0 and 200`);
                         }
+                        
+                        // Reduce by 0.500 liters
+                        meter.target_liters = Math.max(0, meter.target_liters - 0.500);
                     });
                     
                     // Update timestamp
