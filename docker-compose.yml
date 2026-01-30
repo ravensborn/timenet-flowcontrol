@@ -15,12 +15,6 @@ services:
       - dokploy-network
     labels:
       - traefik.enable=true
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/rates.json"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
 volumes:
   flow-control-data:
