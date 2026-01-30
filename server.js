@@ -163,7 +163,7 @@ const server = http.createServer((req, res) => {
                         }
                         
                         // Reduce by 0.500 liters
-                        meter.target_liters = Math.max(0, meter.target_liters - 0.300);
+                        meter.target_liters = Math.max(0, meter.target_liters);
                     });
                     
                     // Update timestamp
