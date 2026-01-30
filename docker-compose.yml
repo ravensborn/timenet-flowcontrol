@@ -11,6 +11,10 @@ services:
       - AUTH_USERNAME=admin
       - AUTH_PASSWORD=admin@111
     restart: unless-stopped
+    networks:
+      - dokploy-network
+    labels:
+      - traefik.enable=true
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/rates.json"]
       interval: 30s
@@ -20,3 +24,7 @@ services:
 
 volumes:
   flow-control-data:
+
+networks:
+  dokploy-network:
+    external: true
