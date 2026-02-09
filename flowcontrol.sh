@@ -1,110 +1,186 @@
-
 #!/bin/bash
 
-# Flow Meter Control Script
-# Opens valve, monitors flow until 40L reached, then closes valve and resets meter
+###########################################
+# Flow Meter Predictive Control Script
+###########################################
 
 TARGET_LITERS=0.200
+VALVE_CLOSE_TIME=1        # Seconds it takes valve to fully close
+CHECK_INTERVAL=0.5        # Flow meter polling interval (seconds)
 LOCKFILE="/var/run/flow_control.lock"
 
-# Function to cleanup on exit
+###########################################
+# Cleanup
+###########################################
 cleanup() {
     rm -f "$LOCKFILE"
 }
+trap cleanup EXIT INT TERM
 
-# Check if script is already running
+###########################################
+# Prevent Multiple Instances
+###########################################
 if [ -f "$LOCKFILE" ]; then
-    # Check if the process is still actually running
     OLD_PID=$(cat "$LOCKFILE")
     if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
-        echo "Error: Script is already running (PID: $OLD_PID)"
+        echo "Error: Script already running (PID: $OLD_PID)"
         exit 1
     else
-        # Stale lock file, remove it
         echo "Removing stale lock file..."
         rm -f "$LOCKFILE"
     fi
 fi
 
-# Create lock file with current PID
 echo $$ > "$LOCKFILE"
 
-# Ensure lock file is removed on exit (normal, error, or interrupt)
-trap cleanup EXIT INT TERM
-
-# Function to read flow meter and calculate total liters
+###########################################
+# Flow Meter Read Function
+###########################################
 read_flow_meter() {
-    response=$(ubus call modbus_client.rpc serial.test '{"id":1,"timeout":1,"function":3,"first_reg":3,"reg_count":"4","data_type":"16bit_int_hi_first","no_brackets":0,"serial_type":"/dev/rs485","baudrate":9600,"databits":8,"stopbits":1,"parity":"none","flowcontrol":"none"}' 2>/dev/null)
+    response=$(ubus call modbus_client.rpc serial.test '{
+        "id":1,
+        "timeout":1,
+        "function":3,
+        "first_reg":3,
+        "reg_count":"4",
+        "data_type":"16bit_int_hi_first",
+        "no_brackets":0,
+        "serial_type":"/dev/rs485",
+        "baudrate":9600,
+        "databits":8,
+        "stopbits":1,
+        "parity":"none",
+        "flowcontrol":"none"
+    }' 2>/dev/null)
 
-    # Extract the result array from response
     result=$(echo "$response" | grep -o '"result": *"\[[^]]*\]"' | sed 's/"result": *"\[//;s/\]"//')
 
-    # Parse the 4 values (T1, T2, T3, T4)
     T1=$(echo "$result" | cut -d',' -f1 | tr -d ' ')
     T2=$(echo "$result" | cut -d',' -f2 | tr -d ' ')
     T3=$(echo "$result" | cut -d',' -f3 | tr -d ' ')
     T4=$(echo "$result" | cut -d',' -f4 | tr -d ' ')
 
-    # Calculate total: T1 * 100000000 + T2 * 10000 + T3 + T4/1000
-    # Using awk for floating point arithmetic
-    total=$(awk "BEGIN {printf \"%.3f\", $T1 * 100000000 + $T2 * 10000 + $T3 + $T4 / 1000}")
-
-    echo "$total"
+    awk "BEGIN {printf \"%.3f\", $T1 * 100000000 + $T2 * 10000 + $T3 + $T4 / 1000}"
 }
 
-# Function to open valve (9000 = fully open)
+###########################################
+# Valve Control Functions
+###########################################
 open_valve() {
-    ubus call modbus_client.rpc serial.test '{"id":2,"timeout":1,"function":16,"first_reg":2,"reg_count":"9000","data_type":"16bit_int_hi_first","no_brackets":0,"serial_type":"/dev/rs485","baudrate":9600,"databits":8,"stopbits":1,"parity":"none","flowcontrol":"none"}' >/dev/null 2>&1
+    ubus call modbus_client.rpc serial.test '{
+        "id":2,
+        "timeout":1,
+        "function":16,
+        "first_reg":2,
+        "reg_count":"9000",
+        "data_type":"16bit_int_hi_first",
+        "no_brackets":0,
+        "serial_type":"/dev/rs485",
+        "baudrate":9600,
+        "databits":8,
+        "stopbits":1,
+        "parity":"none",
+        "flowcontrol":"none"
+    }' >/dev/null 2>&1
 }
 
-# Function to close valve (0000 = closed)
 close_valve() {
-    ubus call modbus_client.rpc serial.test '{"id":2,"timeout":1,"function":16,"first_reg":2,"reg_count":"0000","data_type":"16bit_int_hi_first","no_brackets":0,"serial_type":"/dev/rs485","baudrate":9600,"databits":8,"stopbits":1,"parity":"none","flowcontrol":"none"}' >/dev/null 2>&1
+    ubus call modbus_client.rpc serial.test '{
+        "id":2,
+        "timeout":1,
+        "function":16,
+        "first_reg":2,
+        "reg_count":"0000",
+        "data_type":"16bit_int_hi_first",
+        "no_brackets":0,
+        "serial_type":"/dev/rs485",
+        "baudrate":9600,
+        "databits":8,
+        "stopbits":1,
+        "parity":"none",
+        "flowcontrol":"none"
+    }' >/dev/null 2>&1
 }
 
-# Function to reset flow meter
+###########################################
+# Reset Flow Meter
+###########################################
 reset_flow_meter() {
-    ubus call modbus_client.rpc serial.test '{"id":1,"timeout":1,"function":6,"first_reg":3,"reg_count":"0000","data_type":"16bit_int_hi_first","no_brackets":0,"serial_type":"/dev/rs485","baudrate":9600,"databits":8,"stopbits":1,"parity":"none","flowcontrol":"none"}' >/dev/null 2>&1
+    ubus call modbus_client.rpc serial.test '{
+        "id":1,
+        "timeout":1,
+        "function":6,
+        "first_reg":3,
+        "reg_count":"0000",
+        "data_type":"16bit_int_hi_first",
+        "no_brackets":0,
+        "serial_type":"/dev/rs485",
+        "baudrate":9600,
+        "databits":8,
+        "stopbits":1,
+        "parity":"none",
+        "flowcontrol":"none"
+    }' >/dev/null 2>&1
 }
 
-# Main script
-echo "Starting flow control (PID: $$)..."
-echo "Target: ${TARGET_LITERS} liters"
+###########################################
+# Main Logic
+###########################################
 
+echo "-------------------------------------"
+echo "Flow Control Started (PID: $$)"
+echo "Target Volume: ${TARGET_LITERS} L"
+echo "-------------------------------------"
 
-# Extra sleep to prevent reading two sensors at the same time when script is ran on loop
-sleep 2
+sleep 2   # Prevent bus collision
 
-# Open the valve
 echo "Opening valve..."
 open_valve
-sleep 1
 
-# Monitor flow until target reached
+sleep 2   # Allow stable flow
+
+previous_flow=$(read_flow_meter)
+previous_time=$(date +%s.%N)
+
 echo "Monitoring flow..."
-while true; do
-    current_flow=$(read_flow_meter)
-    echo "Current flow: ${current_flow} L"
 
-    # Compare using awk (floating point comparison)
-    reached=$(awk "BEGIN {print ($current_flow >= $TARGET_LITERS) ? 1 : 0}")
+while true; do
+
+    current_flow=$(read_flow_meter)
+    current_time=$(date +%s.%N)
+
+    delta_volume=$(awk "BEGIN {print $current_flow - $previous_flow}")
+    delta_time=$(awk "BEGIN {print $current_time - $previous_time}")
+
+    if (( $(awk "BEGIN {print ($delta_time > 0)}") )); then
+        flow_rate=$(awk "BEGIN {print $delta_volume / $delta_time}")
+    else
+        flow_rate=0
+    fi
+
+    predicted_overshoot=$(awk "BEGIN {print $flow_rate * $VALVE_CLOSE_TIME}")
+    stop_at=$(awk "BEGIN {print $TARGET_LITERS - $predicted_overshoot}")
+
+    printf "Flow: %.3f L | Rate: %.3f L/s | StopAt: %.3f L\n" \
+        "$current_flow" "$flow_rate" "$stop_at"
+
+    reached=$(awk "BEGIN {print ($current_flow >= $stop_at) ? 1 : 0}")
 
     if [ "$reached" -eq 1 ]; then
-        echo "Target reached! Flow: ${current_flow} L"
+        echo "Predictive cutoff reached — closing valve..."
+        close_valve
         break
     fi
 
-    sleep 1
+    previous_flow=$current_flow
+    previous_time=$current_time
+
+    sleep $CHECK_INTERVAL
 done
 
-# Close the valve
-echo "Closing valve..."
-close_valve
-sleep 4
-
-# Reset the flow meter
 echo "Resetting flow meter..."
 reset_flow_meter
 
-echo "Done!"
-exit 
+echo "Flow Control Complete"
+echo "-------------------------------------"
+exit 0
